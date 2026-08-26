@@ -1,0 +1,13 @@
+services:
+  miniweather-ml-warning-service:
+    build: .
+    container_name: miniweather-ml-warning-service
+    restart: always
+    env_file:
+      - .env
+    networks:
+      - miniweather-net
+
+networks:
+  miniweather-net:
+    external: true

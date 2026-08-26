@@ -1,0 +1,26 @@
+{
+  "experiment_id": "wind_30d",
+  "hazard": "angin_kencang",
+  "sequence_length": 30,
+  "feature_group": "wind_only",
+  "model_features": [
+    "ff_x",
+    "ff_avg",
+    "wind_change_1d",
+    "ddd_x_sin",
+    "ddd_x_cos",
+    "missing_ff_x",
+    "missing_ff_avg"
+  ],
+  "feature_weights": {
+    "ff_x": 1.75,
+    "ff_avg": 1.75,
+    "wind_change_1d": 1.75,
+    "ddd_x_sin": 0.5833333134651184,
+    "ddd_x_cos": 0.5833333134651184,
+    "missing_ff_x": 0.2916666567325592,
+    "missing_ff_avg": 0.2916666567325592
+  },
+  "source_notebook": "06_yogyakarta_export_deployment_models.ipynb",
+  "notes": "Deployment artifact trained from processed DI Yogyakarta daily features."
+}

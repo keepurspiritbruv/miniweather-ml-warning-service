@@ -1,0 +1,22 @@
+{
+  "experiment_id": "rain_7d",
+  "hazard": "curah_hujan_tinggi",
+  "sequence_length": 7,
+  "feature_group": "rain_only",
+  "model_features": [
+    "RR",
+    "rain_3d",
+    "rain_7d",
+    "rain_change_1d",
+    "missing_RR"
+  ],
+  "feature_weights": {
+    "RR": 1.3043478727340698,
+    "rain_3d": 1.3043478727340698,
+    "rain_7d": 1.3043478727340698,
+    "rain_change_1d": 0.8695652484893799,
+    "missing_RR": 0.21739131212234497
+  },
+  "source_notebook": "06_yogyakarta_export_deployment_models.ipynb",
+  "notes": "Deployment artifact trained from processed DI Yogyakarta daily features."
+}
