@@ -44,6 +44,18 @@ class AlertCooldown:
 
         return False, f"cooldown_active_{elapsed_hours:.1f}h"
 
+    def note_normal(self, hazard: str) -> bool:
+        """Forget stored cooldown state when the hazard returns to NORMAL.
+
+        Returns True when a stored record was removed.
+        """
+        state = self._load()
+        if hazard not in state:
+            return False
+        del state[hazard]
+        self._save(state)
+        return True
+
     def _load(self) -> dict:
         if not self.path.exists():
             return {}

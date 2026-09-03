@@ -61,6 +61,26 @@ def test_downgrade_is_never_posted(tmp_path):
     assert reason == "downgrade_suppressed"
 
 
+def test_note_normal_removes_stored_state(tmp_path):
+    cooldown = AlertCooldown(tmp_path / "state.json")
+    cooldown.should_post("curah_hujan_tinggi", "AWAS", NOW, 12.0)
+
+    assert cooldown.note_normal("curah_hujan_tinggi") is True
+
+    later = datetime(2026, 9, 4, 1, 0, 0, tzinfo=timezone.utc)
+    allowed, reason = cooldown.should_post("curah_hujan_tinggi", "WASPADA", later, 12.0)
+
+    assert allowed is True
+    assert reason == "first_post"
+
+
+def test_note_normal_without_state_returns_false(tmp_path):
+    cooldown = AlertCooldown(tmp_path / "state.json")
+
+    assert cooldown.note_normal("curah_hujan_tinggi") is False
+    assert not (tmp_path / "state.json").exists()
+
+
 def test_hazards_are_isolated(tmp_path):
     cooldown = AlertCooldown(tmp_path / "state.json")
     cooldown.should_post("curah_hujan_tinggi", "WASPADA", NOW, 12.0)
