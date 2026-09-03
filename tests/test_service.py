@@ -7,7 +7,7 @@ from app.alert_rules import AlertDecision
 from app.config import load_settings
 from app.model_runner import ModelResult
 from app.scylla_client import WeatherRow
-from app.service import drop_partial_today, run_once
+from app.service import _is_stale, drop_partial_today, run_once
 
 
 class FakeWeatherClient:
@@ -29,15 +29,17 @@ class FakeWeatherClient:
 
 
 class FakeRunner:
-    def __init__(self, hazard):
+    def __init__(self, hazard, status="SCORED", score=1.5):
         self.hazard = hazard
+        self.status = status
+        self.score = score
 
     def score_latest(self, daily_df):
         return ModelResult(
             experiment_id="fake",
             hazard=self.hazard,
-            status="SCORED",
-            score=1.5,
+            status=self.status,
+            score=self.score,
             thresholds={"p95": 1.0, "p99": 2.0, "p995": 3.0},
             reason="OK",
         )
@@ -124,6 +126,42 @@ class FakeCooldown:
         return (True, "fake")
 
 
+class RecordingCooldown(FakeCooldown):
+    def __init__(self):
+        super().__init__()
+        self.normal_calls = []
+
+    def note_normal(self, hazard):
+        self.normal_calls.append(hazard)
+        return True
+
+
+def test_run_once_resets_cooldown_when_status_normal():
+    settings = load_settings(
+        {
+            "SCYLLA_PASSWORD": "secret",
+            "MINIWEATHER_AUTH_EMAIL": "admin@example.com",
+            "MINIWEATHER_AUTH_PASSWORD": "admin-secret",
+            "DRY_RUN": "false",
+        }
+    )
+    backend = FakeBackendClient()
+    cooldown = RecordingCooldown()
+
+    decisions = run_once(
+        settings=settings,
+        weather_client=FakeWeatherClient(),
+        backend_client=backend,
+        runners=[FakeRunner("curah_hujan_tinggi", status="NORMAL")],
+        cooldown=cooldown,
+    )
+
+    assert decisions[0].status == "NORMAL"
+    assert backend.created == []
+    assert cooldown.normal_calls == ["curah_hujan_tinggi"]
+    assert cooldown.calls == []
+
+
 def test_run_once_posts_when_not_dry_run_and_cooldown_allows():
     settings = load_settings(
         {
@@ -200,3 +238,17 @@ def test_run_once_dry_run_never_consults_cooldown():
     assert cooldown.calls == []
     assert backend.created == []
     assert decisions[0].status == "WASPADA"
+
+
+def test_is_stale_true_for_three_day_old_data():
+    today = datetime.now(ZoneInfo("Asia/Jakarta")).date()
+    df = pd.DataFrame({"date": [today - timedelta(days=3)], "RR": [10.0]})
+
+    assert _is_stale(df, 48, "Asia/Jakarta") is True
+
+
+def test_is_stale_false_for_yesterday_data():
+    today = datetime.now(ZoneInfo("Asia/Jakarta")).date()
+    df = pd.DataFrame({"date": [today - timedelta(days=1)], "RR": [10.0]})
+
+    assert _is_stale(df, 48, "Asia/Jakarta") is False

@@ -25,13 +25,16 @@ def _latest_values(daily_df, hazard: str) -> dict[str, float]:
     return {}
 
 
-def _is_stale(daily_df, stale_after_hours: int) -> bool:
+def _is_stale(daily_df, stale_after_hours: int, timezone_name: str) -> bool:
     if daily_df.empty or "date" not in daily_df.columns:
         return False
-    latest_date = datetime.combine(daily_df.iloc[-1]["date"], datetime.min.time()).replace(
-        tzinfo=timezone.utc
+    latest_date = daily_df.iloc[-1]["date"]
+    latest_local = datetime.combine(
+        latest_date, datetime.min.time()
+    ).replace(tzinfo=ZoneInfo(timezone_name))
+    return datetime.now(timezone.utc) - latest_local.astimezone(timezone.utc) > timedelta(
+        hours=stale_after_hours
     )
-    return datetime.now(timezone.utc) - latest_date > timedelta(hours=stale_after_hours)
 
 
 def drop_partial_today(daily_df, timezone_name: str):
@@ -58,7 +61,15 @@ def run_once(
     daily_df = build_daily_features(rows, timezone_name=settings.timezone)
     if settings.skip_partial_today:
         daily_df = drop_partial_today(daily_df, settings.timezone)
-    stale = _is_stale(daily_df, settings.stale_after_hours)
+    stale = _is_stale(daily_df, settings.stale_after_hours, settings.timezone)
+
+    tracker = (
+        cooldown
+        if cooldown is not None
+        else None
+        if settings.dry_run
+        else AlertCooldown(Path(settings.alert_state_file))
+    )
 
     decisions: list[AlertDecision] = []
     for runner in runners:
@@ -85,12 +96,14 @@ def run_once(
             decision.message,
         )
 
+        if not settings.dry_run and decision.status == "NORMAL":
+            if tracker.note_normal(decision.hazard):
+                LOGGER.info(
+                    "cooldown reset hazard=%s status=NORMAL",
+                    decision.hazard,
+                )
+
         if decision.should_post and not settings.dry_run:
-            tracker = (
-                cooldown
-                if cooldown is not None
-                else AlertCooldown(Path(settings.alert_state_file))
-            )
             allow, reason = tracker.should_post(
                 decision.hazard,
                 decision.status,
