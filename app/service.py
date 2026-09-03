@@ -1,8 +1,10 @@
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 from zoneinfo import ZoneInfo
 import logging
 
 from app.alert_rules import AlertDecision, decide_alert
+from app.alert_state import AlertCooldown
 from app.config import Settings
 from app.features import build_daily_features
 
@@ -43,7 +45,13 @@ def drop_partial_today(daily_df, timezone_name: str):
     return daily_df
 
 
-def run_once(settings: Settings, weather_client, backend_client, runners) -> list[AlertDecision]:
+def run_once(
+    settings: Settings,
+    weather_client,
+    backend_client,
+    runners,
+    cooldown=None,
+) -> list[AlertDecision]:
     end_time = datetime.now(timezone.utc)
     start_time = end_time - timedelta(days=35)
     rows = weather_client.fetch_rows(start_time=start_time, end_time=end_time)
@@ -78,6 +86,25 @@ def run_once(settings: Settings, weather_client, backend_client, runners) -> lis
         )
 
         if decision.should_post and not settings.dry_run:
-            backend_client.create_warning(decision.message)
+            tracker = (
+                cooldown
+                if cooldown is not None
+                else AlertCooldown(Path(settings.alert_state_file))
+            )
+            allow, reason = tracker.should_post(
+                decision.hazard,
+                decision.status,
+                datetime.now(timezone.utc),
+                settings.alert_cooldown_hours,
+            )
+            if allow:
+                backend_client.create_warning(decision.message)
+            else:
+                LOGGER.info(
+                    "warning suppressed hazard=%s status=%s reason=%s",
+                    decision.hazard,
+                    decision.status,
+                    reason,
+                )
 
     return decisions

@@ -113,3 +113,90 @@ def test_drop_partial_today_keeps_frame_without_date_column():
     result = drop_partial_today(df, "Asia/Jakarta")
 
     assert result is df
+
+
+class FakeCooldown:
+    def __init__(self):
+        self.calls = []
+
+    def should_post(self, hazard, level, now, cooldown_hours):
+        self.calls.append((hazard, level))
+        return (True, "fake")
+
+
+def test_run_once_posts_when_not_dry_run_and_cooldown_allows():
+    settings = load_settings(
+        {
+            "SCYLLA_PASSWORD": "secret",
+            "MINIWEATHER_AUTH_EMAIL": "admin@example.com",
+            "MINIWEATHER_AUTH_PASSWORD": "admin-secret",
+            "DRY_RUN": "false",
+        }
+    )
+    backend = FakeBackendClient()
+    cooldown = FakeCooldown()
+
+    decisions = run_once(
+        settings=settings,
+        weather_client=FakeWeatherClient(),
+        backend_client=backend,
+        runners=[FakeRunner("curah_hujan_tinggi")],
+        cooldown=cooldown,
+    )
+
+    assert len(backend.created) == 1
+    assert cooldown.calls == [("curah_hujan_tinggi", "WASPADA")]
+    assert decisions[0].status == "WASPADA"
+
+
+class FakeSuppressingCooldown:
+    def should_post(self, hazard, level, now, cooldown_hours):
+        return (False, "cooldown_active_2.0h")
+
+
+def test_run_once_does_not_post_when_cooldown_suppresses():
+    settings = load_settings(
+        {
+            "SCYLLA_PASSWORD": "secret",
+            "MINIWEATHER_AUTH_EMAIL": "admin@example.com",
+            "MINIWEATHER_AUTH_PASSWORD": "admin-secret",
+            "DRY_RUN": "false",
+        }
+    )
+    backend = FakeBackendClient()
+
+    decisions = run_once(
+        settings=settings,
+        weather_client=FakeWeatherClient(),
+        backend_client=backend,
+        runners=[FakeRunner("curah_hujan_tinggi")],
+        cooldown=FakeSuppressingCooldown(),
+    )
+
+    assert backend.created == []
+    assert decisions[0].status == "WASPADA"
+
+
+def test_run_once_dry_run_never_consults_cooldown():
+    settings = load_settings(
+        {
+            "SCYLLA_PASSWORD": "secret",
+            "MINIWEATHER_AUTH_EMAIL": "admin@example.com",
+            "MINIWEATHER_AUTH_PASSWORD": "admin-secret",
+            "DRY_RUN": "true",
+        }
+    )
+    backend = FakeBackendClient()
+    cooldown = FakeCooldown()
+
+    decisions = run_once(
+        settings=settings,
+        weather_client=FakeWeatherClient(),
+        backend_client=backend,
+        runners=[FakeRunner("curah_hujan_tinggi")],
+        cooldown=cooldown,
+    )
+
+    assert cooldown.calls == []
+    assert backend.created == []
+    assert decisions[0].status == "WASPADA"

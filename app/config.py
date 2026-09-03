@@ -53,6 +53,8 @@ class Settings:
     wind_awas_ms: float
     stale_after_hours: int
     query_limit: int
+    alert_cooldown_hours: float
+    alert_state_file: str
 
 
 def load_settings(env: Mapping[str, str] | None = None) -> Settings:
@@ -97,4 +99,6 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
         wind_awas_ms=_get_float(source, "WIND_AWAS_MS", 17.2),
         stale_after_hours=_get_int(source, "STALE_AFTER_HOURS", 48),
         query_limit=_get_int(source, "SCYLLA_QUERY_LIMIT", 250000),
+        alert_cooldown_hours=_get_float(source, "ALERT_COOLDOWN_HOURS", 12.0),
+        alert_state_file=_get(source, "ALERT_STATE_FILE", "alert_state.json"),
     )

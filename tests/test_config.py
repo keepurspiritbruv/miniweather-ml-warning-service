@@ -27,6 +27,8 @@ def test_load_settings_defaults():
     assert settings.rain_awas_mm == 100.0
     assert settings.wind_siaga_ms == 10.8
     assert settings.wind_awas_ms == 17.2
+    assert settings.alert_cooldown_hours == 12.0
+    assert settings.alert_state_file == "alert_state.json"
 
 
 def test_load_settings_boolean_false():
