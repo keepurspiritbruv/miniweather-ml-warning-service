@@ -21,6 +21,15 @@ def has_enough_history(daily_df: pd.DataFrame, sequence_length: int) -> bool:
     return len(daily_df) >= sequence_length
 
 
+def has_consecutive_window(daily_df: pd.DataFrame, sequence_length: int) -> bool:
+    if "date" not in daily_df.columns or len(daily_df) < sequence_length:
+        return False
+    ordered = daily_df.sort_values("date")
+    tail_dates = pd.to_datetime(ordered["date"]).tail(sequence_length)
+    day_diffs = tail_dates.diff().dt.days.iloc[1:]
+    return bool(len(day_diffs) == sequence_length - 1 and (day_diffs == 1).all())
+
+
 class LSTMAutoencoderRunner:
     def __init__(self, artifact_dir: Path):
         from tensorflow.keras.models import load_model
@@ -51,6 +60,19 @@ class LSTMAutoencoderRunner:
                 score=None,
                 thresholds=self.thresholds,
                 reason=f"Need {self.sequence_length} daily rows, got {len(daily_df)}",
+            )
+
+        if not has_consecutive_window(daily_df, self.sequence_length):
+            return ModelResult(
+                experiment_id=self.experiment_id,
+                hazard=self.hazard,
+                status="WAITING_FOR_HISTORY",
+                score=None,
+                thresholds=self.thresholds,
+                reason=(
+                    f"Last {self.sequence_length} daily rows are not "
+                    "consecutive calendar days"
+                ),
             )
 
         missing_features = [name for name in self.model_features if name not in daily_df.columns]
