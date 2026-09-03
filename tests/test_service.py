@@ -1,10 +1,13 @@
 from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
+
+import pandas as pd
 
 from app.alert_rules import AlertDecision
 from app.config import load_settings
 from app.model_runner import ModelResult
 from app.scylla_client import WeatherRow
-from app.service import run_once
+from app.service import drop_partial_today, run_once
 
 
 class FakeWeatherClient:
@@ -71,3 +74,42 @@ def test_run_once_dry_run_does_not_post_warning():
     assert isinstance(decisions[0], AlertDecision)
     assert decisions[0].status == "WASPADA"
     assert backend.created == []
+
+
+def test_drop_partial_today_drops_current_local_day():
+    today = datetime.now(ZoneInfo("Asia/Jakarta")).date()
+    df = pd.DataFrame({"date": [today - timedelta(days=1), today], "RR": [10.0, 5.0]})
+
+    result = drop_partial_today(df, "Asia/Jakarta")
+
+    assert len(result) == 1
+    assert result.iloc[0]["date"] == today - timedelta(days=1)
+    assert len(df) == 2  # original frame must be untouched (returned frame is a copy)
+
+
+def test_drop_partial_today_keeps_last_completed_day():
+    today = datetime.now(ZoneInfo("Asia/Jakarta")).date()
+    df = pd.DataFrame(
+        {"date": [today - timedelta(days=2), today - timedelta(days=1)], "RR": [10.0, 9.0]}
+    )
+
+    result = drop_partial_today(df, "Asia/Jakarta")
+
+    assert len(result) == 2
+    assert result.iloc[-1]["date"] == today - timedelta(days=1)
+
+
+def test_drop_partial_today_keeps_empty_frame():
+    df = pd.DataFrame({"date": [], "RR": []})
+
+    result = drop_partial_today(df, "Asia/Jakarta")
+
+    assert result is df
+
+
+def test_drop_partial_today_keeps_frame_without_date_column():
+    df = pd.DataFrame({"RR": [10.0, 5.0]})
+
+    result = drop_partial_today(df, "Asia/Jakarta")
+
+    assert result is df

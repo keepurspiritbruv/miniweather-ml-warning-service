@@ -46,6 +46,7 @@ class Settings:
     run_interval_minutes: int
     timezone: str
     dry_run: bool
+    skip_partial_today: bool
     rain_siaga_mm: float
     rain_awas_mm: float
     wind_siaga_ms: float
@@ -89,6 +90,7 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
         run_interval_minutes=_get_int(source, "RUN_INTERVAL_MINUTES", 30),
         timezone=_get(source, "TIMEZONE", "Asia/Jakarta"),
         dry_run=_get_bool(source, "DRY_RUN", True),
+        skip_partial_today=_get_bool(source, "SKIP_PARTIAL_TODAY", True),
         rain_siaga_mm=_get_float(source, "RAIN_SIAGA_MM", 50.0),
         rain_awas_mm=_get_float(source, "RAIN_AWAS_MM", 100.0),
         wind_siaga_ms=_get_float(source, "WIND_SIAGA_MS", 10.8),

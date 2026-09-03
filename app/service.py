@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 import logging
 
 from app.alert_rules import AlertDecision, decide_alert
@@ -31,11 +32,24 @@ def _is_stale(daily_df, stale_after_hours: int) -> bool:
     return datetime.now(timezone.utc) - latest_date > timedelta(hours=stale_after_hours)
 
 
+def drop_partial_today(daily_df, timezone_name: str):
+    """Drop the last row when it is the still-in-progress current local day."""
+    if daily_df.empty or "date" not in daily_df.columns:
+        return daily_df
+    ordered = daily_df.sort_values("date")
+    local_today = datetime.now(ZoneInfo(timezone_name)).date()
+    if ordered.iloc[-1]["date"] == local_today:
+        return ordered.iloc[:-1].copy()
+    return daily_df
+
+
 def run_once(settings: Settings, weather_client, backend_client, runners) -> list[AlertDecision]:
     end_time = datetime.now(timezone.utc)
     start_time = end_time - timedelta(days=35)
     rows = weather_client.fetch_rows(start_time=start_time, end_time=end_time)
     daily_df = build_daily_features(rows, timezone_name=settings.timezone)
+    if settings.skip_partial_today:
+        daily_df = drop_partial_today(daily_df, settings.timezone)
     stale = _is_stale(daily_df, settings.stale_after_hours)
 
     decisions: list[AlertDecision] = []

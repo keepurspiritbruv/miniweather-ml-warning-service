@@ -7,3 +7,4 @@ requests>=2.31,<3
 scikit-learn>=1.1,<1.4
 tensorflow>=2.13,<2.14
 pytest>=7.4,<9
+tzdata>=2023.3

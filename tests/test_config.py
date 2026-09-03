@@ -22,6 +22,7 @@ def test_load_settings_defaults():
     assert settings.run_interval_minutes == 30
     assert settings.timezone == "Asia/Jakarta"
     assert settings.dry_run is True
+    assert settings.skip_partial_today is True
     assert settings.rain_siaga_mm == 50.0
     assert settings.rain_awas_mm == 100.0
     assert settings.wind_siaga_ms == 10.8
