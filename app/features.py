@@ -42,7 +42,7 @@ def build_daily_features(rows: Sequence[WeatherRow], timezone_name: str) -> pd.D
     grouped["rain_3d"] = grouped["RR"].rolling(window=3, min_periods=1).sum()
     grouped["rain_7d"] = grouped["RR"].rolling(window=7, min_periods=1).sum()
     grouped["rain_change_1d"] = grouped["RR"].diff().fillna(0.0)
-    grouped["wind_change_1d"] = grouped["ff_avg"].diff().fillna(0.0)
+    grouped["wind_change_1d"] = grouped["ff_x"].diff().fillna(0.0)
 
     radians = np.deg2rad(grouped["ddd_x"])
     grouped["ddd_x_sin"] = np.sin(radians)
