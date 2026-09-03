@@ -74,6 +74,23 @@ collection id: 91e2e000-cb17-494c-8a45-c6182b2a89ac
 
 It posts warning records to the Miniweather backend only when `DRY_RUN=false`.
 
+Additional behavior:
+
+- `SKIP_PARTIAL_TODAY=true` (default) scores only up to the last completed
+  local day, because a still-running day has partial rainfall totals. Note this
+  also means staleness (`STALE_AFTER_HOURS`) is measured from the last completed
+  day, so keep the threshold above ~48h.
+- `ALERT_COOLDOWN_HOURS` (default `12`) is the minimum interval between two
+  warnings of the same level for the same hazard. Escalations are always sent;
+  downgrades are never sent. When conditions return to NORMAL no "clear" warning
+  is posted, so deactivate a still-active warning through the backend admin.
+  Cooldown state is persisted in `ALERT_STATE_FILE` (default `alert_state.json`).
+  Because that path lives on the container's writable layer, mount it as a volume
+  (for example `-v /opt/miniweather/alert_state.json:/app/alert_state.json`) so
+  cooldown state survives container recreation.
+- The service refuses to score when the most recent window contains gaps
+  (non-consecutive calendar days); it reports `WAITING_FOR_HISTORY` instead.
+
 ## Safety
 
 Keep `DRY_RUN=true` until logs are reviewed by the lecturer/admin.
