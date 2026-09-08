@@ -66,13 +66,14 @@ class ScyllaWeatherClient:
         )
         self.session = self.cluster.connect(settings.scylla_keyspace)
         self.query = build_weather_query(settings.scylla_table)
+        self.statement = self.session.prepare(self.query)
 
     def close(self) -> None:
         self.cluster.shutdown()
 
     def fetch_rows(self, start_time: datetime, end_time: datetime) -> list[WeatherRow]:
         result = self.session.execute(
-            self.query,
+            self.statement,
             (
                 self.collection_uuid,
                 start_time,
