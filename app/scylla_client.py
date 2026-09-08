@@ -85,10 +85,10 @@ class ScyllaWeatherClient:
         for row in result:
             rows.append(
                 WeatherRow(
-                    row_id=_to_str(row._id),
-                    collection_id=_to_str(row._collection_id),
-                    created_by=_to_str(row._created_by) or None,
-                    updated_at=row._updated_at,
+                    row_id=_to_str(row.id),
+                    collection_id=_to_str(row.collection_id),
+                    created_by=_to_str(row.created_by) or None,
+                    updated_at=row.updated_at,
                     curah_hujan=_to_float(row.curah_hujan),
                     kecepatan_angin=_to_float(row.kecepatan_angin),
                     arah_angin=_to_float(row.arah_angin),
