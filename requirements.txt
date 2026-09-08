@@ -4,7 +4,7 @@ numpy>=1.23,<1.25
 pandas>=1.5,<2.1
 python-dotenv>=1.0,<2
 requests>=2.31,<3
-scikit-learn>=1.1,<1.4
+scikit-learn==1.1.2
 tensorflow>=2.13,<2.14
 pytest>=7.4,<9
 tzdata>=2023.3

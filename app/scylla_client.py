@@ -52,6 +52,7 @@ class ScyllaWeatherClient:
     def __init__(self, settings: Settings):
         from cassandra.auth import PlainTextAuthProvider
         from cassandra.cluster import Cluster
+        from cassandra.policies import DCAwareRoundRobinPolicy
 
         self.settings = settings
         self.collection_uuid = parse_collection_id(settings.scylla_collection_id)
@@ -63,6 +64,8 @@ class ScyllaWeatherClient:
             contact_points=settings.scylla_contact_points,
             port=settings.scylla_port,
             auth_provider=auth_provider,
+            protocol_version=4,
+            load_balancing_policy=DCAwareRoundRobinPolicy(local_dc="datacenter1"),
         )
         self.session = self.cluster.connect(settings.scylla_keyspace)
         self.query = build_weather_query(settings.scylla_table)

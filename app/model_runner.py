@@ -87,7 +87,7 @@ class LSTMAutoencoderRunner:
             )
 
         latest = daily_df.tail(self.sequence_length)
-        values = latest[self.model_features].astype(float).to_numpy()
+        values = latest[self.model_features].astype(float)
         scaled = self.scaler.transform(values)
         sequence = np.expand_dims(scaled, axis=0)
         reconstructed = self.model.predict(sequence, verbose=0)
