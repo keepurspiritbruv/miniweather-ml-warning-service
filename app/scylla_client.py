@@ -2,11 +2,17 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 import re
+import uuid
 
 from app.config import Settings
 
 
 TABLE_RE = re.compile(r"^records_[a-zA-Z0-9_]+$")
+
+
+def parse_collection_id(value: str) -> uuid.UUID:
+    """Parse a collection id string into a uuid.UUID, failing fast on bad input."""
+    return uuid.UUID(str(value).strip())
 
 
 @dataclass(frozen=True)
@@ -48,6 +54,7 @@ class ScyllaWeatherClient:
         from cassandra.cluster import Cluster
 
         self.settings = settings
+        self.collection_uuid = parse_collection_id(settings.scylla_collection_id)
         auth_provider = PlainTextAuthProvider(
             username=settings.scylla_username,
             password=settings.scylla_password,
@@ -67,7 +74,7 @@ class ScyllaWeatherClient:
         result = self.session.execute(
             self.query,
             (
-                self.settings.scylla_collection_id,
+                self.collection_uuid,
                 start_time,
                 end_time,
                 self.settings.query_limit,

@@ -1,6 +1,8 @@
+import uuid
+
 import pytest
 
-from app.scylla_client import build_weather_query
+from app.scylla_client import build_weather_query, parse_collection_id
 
 
 def test_build_weather_query_uses_collection_timestamp_and_allow_filtering():
@@ -17,3 +19,14 @@ def test_build_weather_query_uses_collection_timestamp_and_allow_filtering():
 def test_build_weather_query_rejects_invalid_table_name():
     with pytest.raises(ValueError):
         build_weather_query("DEPLOY TNTF UGM")
+
+
+def test_parse_collection_id_accepts_valid_uuid():
+    parsed = parse_collection_id("91e2e000-cb17-494c-8a45-c6182b2a89ac")
+
+    assert parsed == uuid.UUID("91e2e000-cb17-494c-8a45-c6182b2a89ac")
+
+
+def test_parse_collection_id_rejects_invalid_uuid():
+    with pytest.raises(ValueError):
+        parse_collection_id("not-a-uuid")
