@@ -1,0 +1,3 @@
+[submodule "AnomalyDetectionLSTM"]
+	path = AnomalyDetectionLSTM
+	url = https://github.com/keepurspiritbruv/AnomalyDetectionLSTM.git
