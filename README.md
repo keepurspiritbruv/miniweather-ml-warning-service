@@ -142,7 +142,37 @@ Tes berjalan tanpa TensorFlow/Scylla (dependency eksternal di-import secara lazy
 
 ---
 
-## 10. Troubleshooting
+## 10. Training Artifact Masked v2 (Fase 2)
+
+Skrip `scripts/train_deployment_v2.py` melatih ulang model deployment dengan **masked
+sliding window** (hari hilang di-mask, tidak dihitung di error) dan mengekspor artifact
+v2 (`threshold.json` berisi `total` + `per_feature`, `feature_config.json` memuat
+`mask_policy`). Skrip memakai `app.masking` agar aturan mask training = inference.
+
+Jalankan di environment yang punya TensorFlow (Colab/Jupyter), setelah notebook 01
+menghasilkan `data/processed/yogyakarta_weather_features.csv`:
+
+```bash
+pip install -r requirements.txt          # berisi tensorflow
+python scripts/train_deployment_v2.py \
+  --processed data/processed/yogyakarta_weather_features.csv \
+  --out artifacts/deployment_v2
+```
+
+Setelah artifact v2 tervalidasi (bandingkan dengan v1 lewat dry-run), promosikan ke v2:
+
+```bash
+# backup v1 lebih dulu, lalu salin v2
+cp -r artifacts/deployment artifacts/deployment_v1_backup
+cp -r artifacts/deployment_v2/* artifacts/deployment/
+```
+
+Service otomatis memakai jalur masked scoring begitu `feature_config.json` artifact
+memuat `mask_policy` (lihat bagian 3).
+
+---
+
+## 11. Troubleshooting
 
 - **`TypeError` bind UUID** → pastikan `SCYLLA_COLLECTION_ID` valid UUID (sudah di-handle kode).
 - **`not all arguments converted`** → jalur query harus via prepared statement (sudah diterapkan).
