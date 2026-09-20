@@ -55,35 +55,7 @@ Detail model, sumber data, dan hasil analisis: lihat `AnomalyDetectionLSTM/READM
 
 ---
 
-## 3. Konfigurasi (`.env`)
-
-Salin `.env.example` menjadi `.env` lalu isi:
-
-| Variabel | Default | Keterangan |
-| -------- | ------- | ---------- |
-| `DATA_SOURCE` | `scylla` | sumber data |
-| `SCYLLA_CONTACT_POINTS` | `10.42.28.70` | IP host Scylla |
-| `SCYLLA_PORT` | `9042` | port CQL |
-| `SCYLLA_KEYSPACE` | `hyperbase` | keyspace |
-| `SCYLLA_USERNAME` / `SCYLLA_PASSWORD` | — | kredensial Scylla (wajib) |
-| `SCYLLA_TABLE` | `records_91e2e000cb17494c8a45c6182b2a89ac` | tabel record device |
-| `SCYLLA_COLLECTION_ID` | `91e2e000-cb17-494c-8a45-c6182b2a89ac` | di-bind sebagai `uuid` |
-| `SCYLLA_QUERY_LIMIT` | `250000` | batas baris per query |
-| `MINIWEATHER_API_BASE_URL` | `http://miniweather-backend:3001` | base URL backend |
-| `MINIWEATHER_AUTH_EMAIL` / `MINIWEATHER_AUTH_PASSWORD` | — | akun **admin/superAdmin** backend (wajib) |
-| `RUN_INTERVAL_MINUTES` | `30` | interval worker |
-| `TIMEZONE` | `Asia/Jakarta` | timezone agregasi harian |
-| `DRY_RUN` | `true` | bila `true`, tidak mengirim warning |
-| `SKIP_PARTIAL_TODAY` | `true` | scoring hanya sampai hari lengkap terakhir |
-| `ALERT_COOLDOWN_HOURS` | `12` | jeda minimum warning level sama per hazard |
-| `ALERT_STATE_FILE` | `alert_state.json` | file state cooldown |
-| `STALE_AFTER_HOURS` | `48` | ambang data dianggap basi |
-| `RAIN_SIAGA_MM` / `RAIN_AWAS_MM` | `50` / `100` | threshold fisik hujan |
-| `WIND_SIAGA_MS` / `WIND_AWAS_MS` | `10.8` / `17.2` | threshold fisik angin |
-
----
-
-## 4. Aturan Alert
+## 3. Aturan Alert
 
 | Level | Rule |
 | ----- | ---- |
@@ -102,7 +74,7 @@ Catatan:
 
 ---
 
-## 5. Integrasi Backend
+## 4. Integrasi Backend
 
 | Aksi | Endpoint |
 | ---- | -------- |
@@ -111,17 +83,6 @@ Catatan:
 | Body warning | `{ "message", "type": "weather", "is_active": true, "source": "ml", "hazard": "<hazard>", "level": "<LEVEL>" }` |
 
 `source`/`hazard`/`level` didukung backend (kolom terstruktur). Bila backend lama belum punya kolom tersebut, field tambahan diabaikan (tidak error). Akun pada `.env` harus ber-role `admin`/`superAdmin` dan `is_active=true`.
-
----
-
-## 6. Akses ScyllaDB
-
-- Tabel record: `records_91e2e000cb17494c8a45c6182b2a89ac` (PK `("_collection_id","_id")`).
-- `_collection_id` bertipe `uuid` → service mem-parse ke `uuid.UUID` sebelum bind.
-- Query dijalankan sebagai **prepared statement**; hasil dibaca via nama kolom driver (`row.id`, `row.collection_id`, `row.updated_at`, dst).
-- Agregasi harian (timezone `Asia/Jakarta`): `RR = sum(curah_hujan)`, `ff_x = max(kecepatan_angin)`, `ff_avg = mean(kecepatan_angin)`, `arah_angin = mean(arah_angin)`.
-
-> Perlu dikonfirmasi admin: apakah `curah_hujan` IoT bersifat incremental (per record) atau cumulative. Jika cumulative, agregasi `sum` harus diganti.
 
 ---
 
@@ -187,11 +148,3 @@ Tes berjalan tanpa TensorFlow/Scylla (dependency eksternal di-import secara lazy
 - **`AttributeError` saat baca row** → akses kolom memakai nama tanpa underscore (`row.id`, bukan `row._id`).
 - **`Unrecognized name updated_at`** → query memakai `_updated_at` (kolom Scylla), bukan `updated_at`.
 - **Scylla timeout** → cek `SCYLLA_CONTACT_POINTS`/port & firewall.
-
----
-
-## 11. Keamanan
-
-- Jangan commit `.env`.
-- Gunakan akun admin khusus untuk service bila memungkinkan.
-- `DRY_RUN=true` sampai hasil dry-run tervalidasi.
