@@ -149,6 +149,11 @@ sliding window** (hari hilang di-mask, tidak dihitung di error) dan mengekspor a
 v2 (`threshold.json` berisi `total` + `per_feature`, `feature_config.json` memuat
 `mask_policy`). Skrip memakai `app.masking` agar aturan mask training = inference.
 
+Dari Jupyter Lab, gunakan notebook `notebooks/07_masked_v2_training.ipynb` (menjalankan
+skrip ini, menampilkan ringkasan, threshold per fitur, perbandingan v1 vs v2, dan uji
+scoring cepat). Prasyarat: upload hasil notebook 01 ke
+`data/processed/yogyakarta_weather_features.csv`.
+
 Jalankan di environment yang punya TensorFlow (Colab/Jupyter), setelah notebook 01
 menghasilkan `data/processed/yogyakarta_weather_features.csv`:
 
@@ -159,9 +164,7 @@ python scripts/train_deployment_v2.py \
   --out artifacts/deployment_v2
 ```
 
-Setelah artifact v2 tervalidasi (bandingkan dengan v1 lewat dry-run), promosikan ke v2:
-
-```bash
+Setelah artifact v2 tervalidasi (bandingkan dengan v1 lewat dry-run), promosikan ke v2:```bash
 # backup v1 lebih dulu, lalu salin v2
 cp -r artifacts/deployment artifacts/deployment_v1_backup
 cp -r artifacts/deployment_v2/* artifacts/deployment/
