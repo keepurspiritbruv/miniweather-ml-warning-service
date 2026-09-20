@@ -29,6 +29,8 @@ def test_load_settings_defaults():
     assert settings.wind_awas_ms == 17.2
     assert settings.alert_cooldown_hours == 12.0
     assert settings.alert_state_file == "alert_state.json"
+    assert settings.min_observed_ratio == 0.7
+    assert settings.impute_max_gap_days == 3
 
 
 def test_load_settings_boolean_false():

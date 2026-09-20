@@ -71,6 +71,7 @@ Catatan:
 - `SIAGA`/`AWAS` hanya aktif bila syarat fisik terpenuhi; jika tidak, status tetap `WASPADA`. Tidak ada eskalasi berbasis nilai fisik saja.
 - `ALERT_COOLDOWN_HOURS`: level sama tidak dikirim ulang sebelum jeda; eskalasi selalu dikirim; penurunan level tidak dikirim. Saat kembali `NORMAL`, state cooldown di-reset.
 - `SKIP_PARTIAL_TODAY=true`: hari berjalan (parsial) tidak discoring.
+- Masked sliding window (aktif untuk artifact v2 yang punya `mask_policy`): hari/nilai hilang ditandai `mask=0` dan **tidak** dihitung di reconstruction error; gap pendek diimputasi untuk input (batas `IMPUTE_MAX_GAP_DAYS`, default `3`). Bila rasio observed di window `< MIN_OBSERVED_RATIO` (default `0.7`) → status `INSUFFICIENT_DATA` (tidak mengirim warning).
 
 ---
 

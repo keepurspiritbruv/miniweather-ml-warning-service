@@ -55,6 +55,8 @@ class Settings:
     query_limit: int
     alert_cooldown_hours: float
     alert_state_file: str
+    min_observed_ratio: float
+    impute_max_gap_days: int
 
 
 def load_settings(env: Mapping[str, str] | None = None) -> Settings:
@@ -101,4 +103,6 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
         query_limit=_get_int(source, "SCYLLA_QUERY_LIMIT", 250000),
         alert_cooldown_hours=_get_float(source, "ALERT_COOLDOWN_HOURS", 12.0),
         alert_state_file=_get(source, "ALERT_STATE_FILE", "alert_state.json"),
+        min_observed_ratio=_get_float(source, "MIN_OBSERVED_RATIO", 0.7),
+        impute_max_gap_days=_get_int(source, "IMPUTE_MAX_GAP_DAYS", 3),
     )
