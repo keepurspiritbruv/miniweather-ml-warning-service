@@ -116,7 +116,13 @@ def chronological_split_dates(data: pd.DataFrame, train_ratio: float = 0.70, val
     dates = np.array(sorted(pd.to_datetime(data["date"]).dt.normalize().unique()))
     train_end = int(len(dates) * train_ratio)
     val_end = int(len(dates) * val_ratio)
-    return set(dates[:train_end]), set(dates[train_end:val_end]), set(dates[val_end:])
+    # Use pd.Timestamp so membership checks against frame dates (also Timestamp) work.
+    to_timestamps = lambda values: {pd.Timestamp(value) for value in values}
+    return (
+        to_timestamps(dates[:train_end]),
+        to_timestamps(dates[train_end:val_end]),
+        to_timestamps(dates[val_end:]),
+    )
 
 
 def build_windows(frames, features, sequence_length, scaler, date_sets):
@@ -262,7 +268,9 @@ def run(config, data, args, out_root: Path) -> dict:
             train_rows.append(values.to_numpy()[mask])
     if not train_rows:
         raise ValueError("No train rows for the scaler")
-    scaler = RobustScaler().fit(np.vstack(train_rows))
+    # Fit on a DataFrame with feature names so inference can transform a DataFrame
+    # with the same columns without sklearn warnings.
+    scaler = RobustScaler().fit(pd.DataFrame(np.vstack(train_rows), columns=features))
 
     x, m, meta = build_windows(frames, features, config["sequence_length"], scaler, date_sets)
     train = (meta["split"] == "train").to_numpy()
