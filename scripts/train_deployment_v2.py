@@ -23,12 +23,16 @@ from __future__ import annotations
 import argparse
 import json
 import random
+import sys
 from pathlib import Path
 
 import joblib
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import RobustScaler
+
+# Allow running as `python scripts/train_deployment_v2.py` from the project root.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from app.masking import build_feature_masks, impute_window, masked_weighted_error, to_calendar_window
 
