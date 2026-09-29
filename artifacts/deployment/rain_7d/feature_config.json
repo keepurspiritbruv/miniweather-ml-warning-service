@@ -17,6 +17,10 @@
     "rain_change_1d": 0.8695652484893799,
     "missing_RR": 0.21739131212234497
   },
-  "source_notebook": "06_yogyakarta_export_deployment_models.ipynb",
-  "notes": "Deployment artifact trained from processed DI Yogyakarta daily features."
+  "mask_policy": "observed_mask_v1",
+  "min_observed_ratio": 0.7,
+  "impute_max_gap_days": 3,
+  "version": 2,
+  "source_notebook": "notebooks/07_masked_v2_training.ipynb",
+  "notes": "Masked sliding-window deployment artifact."
 }

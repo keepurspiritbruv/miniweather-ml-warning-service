@@ -1,0 +1,3 @@
+experiment_id,hazard,sequence_length,feature_group,n_features,train_windows,validation_windows,test_windows,total_p95,total_p99,total_p995,artifact_dir
+rain_7d,curah_hujan_tinggi,7,rain_only,5,2562,1026,1028,4.056024408969307,10.104841880554199,11.94222082395033,/home/jovyan/Skripsi_Thesis_Disertasi/Dhimas WeatherStationML/artifacts/deployment_v2/rain_7d
+wind_30d,angin_kencang,30,wind_only,7,2516,1026,1028,1.4694576090062275,3.405701301230097,3.921473848231805,/home/jovyan/Skripsi_Thesis_Disertasi/Dhimas WeatherStationML/artifacts/deployment_v2/wind_30d
