@@ -327,7 +327,7 @@ def run(config, data, args, out_root: Path) -> dict:
 
     output_dir = out_root / config["experiment_id"]
     output_dir.mkdir(parents=True, exist_ok=True)
-    model.save(output_dir / "model.keras")
+    model.save(output_dir / "model.keras", include_optimizer=False)
     joblib.dump(scaler, output_dir / "scaler.pkl")
     (output_dir / "threshold.json").write_text(
         json.dumps({"total": total_thresholds, "per_feature": per_feature_thresholds}, indent=2),
