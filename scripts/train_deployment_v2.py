@@ -34,6 +34,32 @@ from sklearn.preprocessing import RobustScaler
 # Allow running as `python scripts/train_deployment_v2.py` from the project root.
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+
+def _preload_libstdcxx() -> None:
+    """Load a newer libstdc++ (conda) before TensorFlow is imported, if present.
+
+    Some Jupyter images ship an older system libstdc++ than TensorFlow/protobuf
+    needs (GLIBCXX_3.4.29). Preloading the conda lib avoids the ImportError.
+    """
+    import ctypes
+    import os
+
+    candidates = [
+        os.path.join(os.environ.get("CONDA_PREFIX", "") or "", "lib", "libstdc++.so.6"),
+        os.path.join(sys.prefix, "lib", "libstdc++.so.6"),
+        "/opt/conda/lib/libstdc++.so.6",
+    ]
+    for candidate in candidates:
+        if candidate and os.path.exists(candidate):
+            try:
+                ctypes.CDLL(candidate, mode=ctypes.RTLD_GLOBAL)
+            except OSError:
+                continue
+            break
+
+
+_preload_libstdcxx()
+
 from app.masking import build_feature_masks, impute_window, masked_weighted_error, to_calendar_window
 
 RAIN_WEIGHTS = {"RR": 3.0, "rain_3d": 3.0, "rain_7d": 3.0, "rain_change_1d": 2.0, "missing_RR": 0.5}
