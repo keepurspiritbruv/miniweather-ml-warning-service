@@ -172,14 +172,3 @@ cp -r artifacts/deployment_v2/* artifacts/deployment/
 
 Service otomatis memakai jalur masked scoring begitu `feature_config.json` artifact
 memuat `mask_policy` (lihat bagian 3).
-
----
-
-## 11. Troubleshooting
-
-- **`TypeError` bind UUID** → pastikan `SCYLLA_COLLECTION_ID` valid UUID (sudah di-handle kode).
-- **`not all arguments converted`** → jalur query harus via prepared statement (sudah diterapkan).
-- **`AttributeError` saat baca row** → akses kolom memakai nama tanpa underscore (`row.id`, bukan `row._id`).
-- **`Unrecognized name updated_at`** → query memakai `_updated_at` (kolom Scylla), bukan `updated_at`.
-- **`ImportError: GLIBCXX_3.4.29 not found` di Jupyter** → libstdc++ sistem lebih tua daripada yang dibutuhkan TensorFlow. Notebook `notebooks/07_masked_v2_training.ipynb` sudah memuat cell preload libstdc++ conda; alternatif: jalankan kernel dengan `LD_LIBRARY_PATH=$CONDA_PREFIX/lib` atau preload `/opt/conda/lib/libstdc++.so.6`.
-- **Scylla timeout** → cek `SCYLLA_CONTACT_POINTS`/port & firewall.
